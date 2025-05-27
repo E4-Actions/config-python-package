@@ -1,18 +1,27 @@
 ﻿name: 'Python Action'
 inputs:
-  target:
-    description: 'Target'
-    required: false
+  target-repository-path:
+    description: 'Target Repository Path'
+    required: true
+  package-name:
+    description: 'Package Name'
+    required: true
 runs:
   using: composite
   steps:
-    - name: 'Set variables'
-      id: set-variables
-      run: |
-        [ -n "${{ inputs.target }}" ] && TARGET="${{ inputs.target }}" || TARGET="${{ github.repository_owner }}"
-        echo "TARGET=$TARGET" >> "$GITHUB_OUTPUT"
-      shell: bash
     - name: 'Run python scripts'
-      working-directory: './scripts'
-      run: python main.py ${{ steps.set-variables.outputs.TARGET }}
       shell: bash
+      working-directory: ${{ github.action_path }}/scripts
+      run: |
+        [ -f requirements.txt ] && pip install -r requirements.txt
+        python main.py ${{ github.workspace }}/${{ inputs.target-repository-path }} ${{ inputs.package-name }}
+    - name: 'Commit'
+      shell: bash
+      working-directory: ${{ github.workspace }}/${{ inputs.target-repository-path }}
+      run: |
+        git config user.name 'github-actions[bot]'
+        git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+        git add .
+        git commit -m "Chore: Config python package"
+        git push

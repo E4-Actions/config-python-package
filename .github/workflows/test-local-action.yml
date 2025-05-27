@@ -3,28 +3,44 @@
 on:
   workflow_dispatch:
     inputs:
-      target:
-        description: 'Target'
-        type: string
-        required: false
+      repository:
+        description: 'Repository'
+        required: true
+        default: 'E4-Python/package-test'
+      branch:
+        description: 'Branch'
+        required: true
+        default: 'master'
+      package-name:
+        description: 'Package Name'
+        required: true
 
 jobs:
   test-local-action:
     runs-on: ubuntu-latest
+    env:
+      TARGET_REPOSITORY_PATH: 'target-repository'
 
     steps:
-      - name: 'Checkout repository'
+      - name: 'Checkout local repository'
         uses: actions/checkout@v4
+        with:
+          path: 'local-repository'
+      - name: 'Checkout target repository'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repository }}
+          ref: ${{ inputs.branch }}
+          path: ${{ env.TARGET_REPOSITORY_PATH }}
+          token: ${{ secrets.ORGANIZATION_TOKEN }}
       - name: 'Set up python'
         uses: actions/setup-python@v3
         with:
           python-version: '3.10'
-      - name: Install dependencies
-        working-directory: './scripts'
-        run: |
-          python -m pip install --upgrade pip
-          [ -f requirements.txt ] && pip install -r requirements.txt
+      - name: 'Upgrade pip'
+        run: python -m pip install --upgrade pip
       - name: 'Test local action'
-        uses: ./
+        uses: ./local-repository/
         with:
-          target: ${{ inputs.target }}
+          target-repository-path: ${{ env.TARGET_REPOSITORY_PATH }}
+          package-name: ${{ inputs.package-name }}

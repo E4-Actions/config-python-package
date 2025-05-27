@@ -1,6 +1,10 @@
 import sys
-import numpy as np
+import e4_utilities
 
 if __name__ == '__main__':
-    print(f'Hello, {sys.argv[1]}!')
-    print(np.arange(10))
+    directory = sys.argv[1]
+    package_name = sys.argv[2]
+
+    python_package = e4_utilities.PythonPackage(directory)
+    python_package.init(package_name)
+    python_package.save_config()
